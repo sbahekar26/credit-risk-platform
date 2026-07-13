@@ -1,9 +1,11 @@
-﻿Applicant applicant = new Applicant
+﻿using System.Security.Cryptography;
+
+Applicant applicant = new Applicant
 {
     FullName = "Sid Bahekar",
-    Age = 27,
+    Age = 18,
     AnnualIncome = 85000m,
-    CreditScore = 750
+    CreditScore = 600
 };
 
 LoanApplication application = new LoanApplication
@@ -19,3 +21,7 @@ LoanApplication application = new LoanApplication
 Console.WriteLine($"Application #{application.Id}");
 Console.WriteLine($"Application {application.Applicant.FullName}");
 Console.WriteLine($"Requesting: ${application.LoanAmount} over {application.LoanTermMonths}months"); 
+
+RiskScorer scorer = new RiskScorer();
+string decision = scorer.Evaluate(application);
+Console.WriteLine($"Decision: {decision}");
