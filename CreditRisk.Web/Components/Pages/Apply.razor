@@ -1,0 +1,56 @@
+@page "/apply"
+@rendermode InteractiveServer
+@using CreditRisk
+
+<h3>Loan Application</h3>
+
+<EditForm Model="@application" OnValidSubmit="@SubmitApplication" FormName="loanForm">
+    <div>
+        <label>Full Name:</label>
+        <InputText @bind-Value="application.Applicant.FullName" />
+    </div>
+    <div>
+        <label>Age:</label>
+        <InputNumber @bind-Value="application.Applicant.Age" />
+    </div>
+    <div>
+        <label>Annual Income:</label>
+        <InputNumber @bind-Value="application.Applicant.AnnualIncome" />
+    </div>
+    <div>
+        <label>Credit Score:</label>
+        <InputNumber @bind-Value="application.Applicant.CreditScore" />
+    </div>
+    <div>
+        <label>Loan Amount:</label>
+        <InputNumber @bind-Value="application.LoanAmount" />
+    </div>
+    <div>
+        <label>Purpose:</label>
+        <InputText @bind-Value="application.Purpose" />
+    </div>
+
+    <button type="submit">Submit Application</button>
+</EditForm>
+
+@if (decision != null)
+{
+    <h4>Decision: @decision</h4>
+}
+
+@code {
+    private LoanApplication application = new LoanApplication
+    {
+        Applicant = new Applicant { FullName = "" },
+        Purpose = "",
+        SubmittedOn = DateTime.Now
+    };
+
+    private string? decision;
+
+    private void SubmitApplication()
+    {
+        RiskScorer scorer = new RiskScorer();
+        decision = scorer.Evaluate(application).ToString();
+    }
+}
