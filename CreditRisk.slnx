@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="CreditRisk.Api/CreditRisk.Api.csproj" />
+  <Project Path="CreditRisk.Console/CreditRisk.Console.csproj" />
+  <Project Path="CreditRisk.Core/CreditRisk.Core.csproj" />
+</Solution>
