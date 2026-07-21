@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
-
+builder.Services.AddHttpClient();
 builder.Services.AddDbContext<CreditRiskDbContext>(options => 
 options.UseSqlite("Data Source = creditrisk.db"));
 // Add services to the container.
