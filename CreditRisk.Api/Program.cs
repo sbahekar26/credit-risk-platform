@@ -1,5 +1,9 @@
+using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
+
+builder.Services.AddDbContext<CreditRiskDbContext>(options => 
+options.UseSqlite("Data Source = creditrisk.db"));
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -14,10 +18,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapPost("/api/applications", (LoanApplication application) =>
+app.MapPost("/api/applications", async (LoanApplication application, CreditRiskDbContext db) =>
 {
     RiskScorer scorer = new RiskScorer();
     RiskDecision decision = scorer.Evaluate(application);
+    application.Decision = decision;
+    db.LoanApplications.Add(application);
+    await db.SaveChangesAsync();
 
     return Results.Ok(new
     {
@@ -26,5 +33,8 @@ app.MapPost("/api/applications", (LoanApplication application) =>
         decision = decision.ToString()
     });
 });
+
+app.MapGet("/api/applications", async (CreditRiskDbContext db) =>
+    await db.LoanApplications.Include(a => a.Applicant).ToListAsync());
 
 app.Run();
