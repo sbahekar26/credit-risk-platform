@@ -1,3 +1,4 @@
+using CreditRisk.Core;
 using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,21 +21,21 @@ app.UseHttpsRedirection();
 
 app.MapPost("/api/applications", async (LoanApplication application, CreditRiskDbContext db) =>
 {
-    RiskScorer scorer = new RiskScorer();
-    RiskDecision decision = scorer.Evaluate(application);
-    application.Decision = decision;
+    application.SubmittedOn = DateTime.Now;
+    application.Decision = RiskDecision.Review;   // placeholder until the model is wired in
+
     db.LoanApplications.Add(application);
     await db.SaveChangesAsync();
 
     return Results.Ok(new
     {
         applicationId = application.Id,
-        applicant = application.Applicant.FullName,
-        decision = decision.ToString()
+        applicant = application.FullName,      // flat now, no .Applicant
+        decision = application.Decision.ToString()
     });
 });
 
 app.MapGet("/api/applications", async (CreditRiskDbContext db) =>
-    await db.LoanApplications.Include(a => a.Applicant).ToListAsync());
+    await db.LoanApplications.ToListAsync());
 
 app.Run();
