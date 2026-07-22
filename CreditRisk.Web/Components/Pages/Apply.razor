@@ -1,35 +1,83 @@
 @page "/apply"
 @rendermode InteractiveServer
-@using CreditRisk
-@using System.Net.Http.Json
-@inject IHttpClientFactory HttpClientFactory
+@using CreditRisk.Core
 
 <h3>Loan Application</h3>
 
 <EditForm Model="@application" OnValidSubmit="@SubmitApplication" FormName="loanForm">
     <div>
         <label>Full Name:</label>
-        <InputText @bind-Value="application.Applicant.FullName" />
+        <InputText @bind-Value="application.FullName" />
     </div>
     <div>
         <label>Age:</label>
-        <InputNumber @bind-Value="application.Applicant.Age" />
+        <InputNumber @bind-Value="application.Age" />
     </div>
     <div>
-        <label>Annual Income:</label>
-        <InputNumber @bind-Value="application.Applicant.AnnualIncome" />
+        <label>Checking Account Status:</label>
+        <InputSelect @bind-Value="application.CheckingStatus">
+            <option value="A11">Negative balance (&lt; 0 DM)</option>
+            <option value="A12">0 – 200 DM</option>
+            <option value="A13">200+ DM</option>
+            <option value="A14">No checking account</option>
+        </InputSelect>
     </div>
     <div>
-        <label>Credit Score:</label>
-        <InputNumber @bind-Value="application.Applicant.CreditScore" />
+        <label>Loan Duration (months):</label>
+        <InputNumber @bind-Value="application.DurationMonths" />
     </div>
     <div>
-        <label>Loan Amount:</label>
-        <InputNumber @bind-Value="application.LoanAmount" />
+        <label>Credit History:</label>
+        <InputSelect @bind-Value="application.CreditHistory">
+            <option value="A30">No credits taken</option>
+            <option value="A31">All paid back duly</option>
+            <option value="A32">Existing credits paid duly</option>
+            <option value="A33">Past payment delays</option>
+            <option value="A34">Critical account</option>
+        </InputSelect>
     </div>
     <div>
         <label>Purpose:</label>
-        <InputText @bind-Value="application.Purpose" />
+        <InputSelect @bind-Value="application.Purpose">
+            <option value="A40">Car (new)</option>
+            <option value="A41">Car (used)</option>
+            <option value="A42">Furniture/equipment</option>
+            <option value="A43">Radio/TV</option>
+            <option value="A46">Education</option>
+            <option value="A49">Business</option>
+        </InputSelect>
+    </div>
+    <div>
+        <label>Credit Amount:</label>
+        <InputNumber @bind-Value="application.CreditAmount" />
+    </div>
+    <div>
+        <label>Savings:</label>
+        <InputSelect @bind-Value="application.Savings">
+            <option value="A61">&lt; 100 DM</option>
+            <option value="A62">100 – 500 DM</option>
+            <option value="A63">500 – 1000 DM</option>
+            <option value="A64">1000+ DM</option>
+            <option value="A65">Unknown / none</option>
+        </InputSelect>
+    </div>
+    <div>
+        <label>Employment Duration:</label>
+        <InputSelect @bind-Value="application.Employment">
+            <option value="A71">Unemployed</option>
+            <option value="A72">&lt; 1 year</option>
+            <option value="A73">1 – 4 years</option>
+            <option value="A74">4 – 7 years</option>
+            <option value="A75">7+ years</option>
+        </InputSelect>
+    </div>
+    <div>
+        <label>Housing:</label>
+        <InputSelect @bind-Value="application.Housing">
+            <option value="A151">Rent</option>
+            <option value="A152">Own</option>
+            <option value="A153">For free</option>
+        </InputSelect>
     </div>
 
     <button type="submit">Submit Application</button>
@@ -43,35 +91,21 @@
 @code {
     private LoanApplication application = new LoanApplication
     {
-        Applicant = new Applicant { FullName = "" },
-        Purpose = "",
+        FullName = "",
+        CheckingStatus = "A11",
+        CreditHistory = "A30",
+        Purpose = "A40",
+        Savings = "A61",
+        Employment = "A71",
+        Housing = "A151",
         SubmittedOn = DateTime.Now
     };
 
     private string? decision;
 
-    private async Task SubmitApplication()
+    private void SubmitApplication()
     {
-        var client = HttpClientFactory.CreateClient();
-
-        var response = await client.PostAsJsonAsync(
-            "http://localhost:5260/api/applications", application);
-
-        if (response.IsSuccessStatusCode)
-        {
-            var result = await response.Content.ReadFromJsonAsync<DecisionResponse>();
-            decision = result?.Decision;
-        }
-        else
-        {
-            decision = "Error contacting the service";
-        }
-    }
-
-    private class DecisionResponse
-    {
-        public int ApplicationId { get; set; }
-        public string? Applicant { get; set; }
-        public string? Decision { get; set; }
+        // placeholder — will call the API/model next
+        decision = "Submitted (scoring coming next)";
     }
 }
