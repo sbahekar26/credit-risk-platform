@@ -13,10 +13,16 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.10" />
+    <PackageReference Include="Microsoft.ML" Version="5.0.0" />
+    <PackageReference Include="Microsoft.ML.FastTree" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CreditRisk.Core\CreditRisk.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="credit-model.zip" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
