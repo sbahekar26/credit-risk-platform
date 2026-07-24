@@ -1,7 +1,9 @@
 ﻿using Microsoft.ML;
 using Microsoft.ML.Data;
+using CreditRisk.Core;
 
 MLContext mlContext = new MLContext(seed: 0);
+mlContext.ComponentCatalog.RegisterAssembly(typeof(LabelMappingFactory).Assembly);
 
 // 1. Load the categorical data
 IDataView data = mlContext.Data.LoadFromTextFile<CreditData>(
@@ -28,10 +30,8 @@ string[] numericColumns = new[]
 };
 
 // 5. Build the pipeline
-var pipeline = mlContext.Transforms.CustomMapping<CreditData, LabelOutput>(
-        (input, output) => { output.Label = input.LabelRaw == 2; },
-        contractName: "LabelMapping")
-    // one-hot encode every categorical column
+var pipeline = mlContext.Transforms.CustomMapping(
+        new LabelMappingFactory().GetMapping(), contractName: "LabelMapping")
     .Append(mlContext.Transforms.Categorical.OneHotEncoding(
         categoricalColumns.Select(c => new InputOutputColumnPair(c)).ToArray()))
     // combine everything into one Features vector
@@ -57,8 +57,3 @@ Console.WriteLine($"F1 Score:  {metrics.F1Score:P2}");
 // 8. Save
 mlContext.Model.Save(model, data.Schema, "credit-model.zip");
 Console.WriteLine("Model saved to credit-model.zip");
-
-public class LabelOutput
-{
-    public bool Label { get; set; }
-}

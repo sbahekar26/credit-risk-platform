@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHttpClient();
+builder.Services.AddSingleton<CreditRiskPredictor>();
 builder.Services.AddDbContext<CreditRiskDbContext>(options => 
 options.UseSqlite("Data Source = creditrisk.db"));
 // Add services to the container.
@@ -19,10 +20,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapPost("/api/applications", async (LoanApplication application, CreditRiskDbContext db) =>
+app.MapPost("/api/applications", async (LoanApplication application, CreditRiskDbContext db, CreditRiskPredictor predictor) =>
 {
     application.SubmittedOn = DateTime.Now;
-    application.Decision = RiskDecision.Review;   // placeholder until the model is wired in
+    application.Decision = predictor.Evaluate(application);   // ← was: RiskDecision.Review
 
     db.LoanApplications.Add(application);
     await db.SaveChangesAsync();
@@ -30,7 +31,7 @@ app.MapPost("/api/applications", async (LoanApplication application, CreditRiskD
     return Results.Ok(new
     {
         applicationId = application.Id,
-        applicant = application.FullName,      // flat now, no .Applicant
+        applicant = application.FullName,
         decision = application.Decision.ToString()
     });
 });
