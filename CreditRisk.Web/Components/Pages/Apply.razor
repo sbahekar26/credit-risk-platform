@@ -1,6 +1,8 @@
 @page "/apply"
 @rendermode InteractiveServer
 @using CreditRisk.Core
+@using System.Net.Http.Json
+@inject IHttpClientFactory HttpClientFactory
 
 <h3>Loan Application</h3>
 
@@ -103,9 +105,28 @@
 
     private string? decision;
 
-    private void SubmitApplication()
+    private async Task SubmitApplication()
+{
+    var client = HttpClientFactory.CreateClient();
+
+    var response = await client.PostAsJsonAsync(
+        "http://localhost:5260/api/applications", application);
+
+    if (response.IsSuccessStatusCode)
     {
-        // placeholder — will call the API/model next
-        decision = "Submitted (scoring coming next)";
+        var result = await response.Content.ReadFromJsonAsync<DecisionResponse>();
+        decision = result?.Decision;
     }
+    else
+    {
+        decision = "Error contacting the service";
+    }
+}
+
+private class DecisionResponse
+{
+    public int ApplicationId { get; set; }
+    public string? Applicant { get; set; }
+    public string? Decision { get; set; }
+}
 }
