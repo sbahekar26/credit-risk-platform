@@ -1,0 +1,67 @@
+@page "/applications"
+@rendermode InteractiveServer
+@using CreditRisk.Core
+@using System.Net.Http.Json
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
+
+<h1 class="page-title">Loan Applications</h1>
+
+@if (applications == null)
+{
+    <p>Loading...</p>
+}
+else if (applications.Count == 0)
+{
+    <p>No applications yet.</p>
+}
+else
+{
+    <table class="app-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Applicant</th>
+                <th>Amount</th>
+                <th>Duration</th>
+                <th>Decision</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var app in applications)
+            {
+                <tr>
+                    <td>#@app.Id</td>
+                    <td>@app.FullName</td>
+                    <td>@app.CreditAmount.ToString("C0")</td>
+                    <td>@app.DurationMonths mo</td>
+                    <td>
+                        <span class="badge badge-@app.Decision.ToString().ToLower()">
+                            @app.Decision
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn-view" @onclick="() => ViewDetail(app.Id)">View</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<LoanApplication>? applications;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var client = HttpClientFactory.CreateClient();
+        applications = await client.GetFromJsonAsync<List<LoanApplication>>(
+            "http://localhost:5260/api/applications");
+    }
+
+    private void ViewDetail(int id)
+    {
+        Navigation.NavigateTo($"/applications/{id}");
+    }
+}

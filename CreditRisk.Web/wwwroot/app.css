@@ -58,3 +58,62 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+.page-title {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: #1a1a2e;
+}
+
+.app-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.app-table thead {
+    background: #1a1a2e;
+    color: white;
+}
+
+.app-table th, .app-table td {
+    padding: 0.85rem 1rem;
+    text-align: left;
+}
+
+.app-table tbody tr {
+    border-bottom: 1px solid #eee;
+}
+
+.app-table tbody tr:hover {
+    background: #f7f8fc;
+}
+
+.badge {
+    padding: 0.3rem 0.7rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.badge-approved { background: #d4edda; color: #155724; }
+.badge-review   { background: #fff3cd; color: #856404; }
+.badge-decline  { background: #f8d7da; color: #721c24; }
+
+.btn-view {
+    padding: 0.35rem 0.9rem;
+    border: 1px solid #1a1a2e;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.btn-view:hover {
+    background: #1a1a2e;
+    color: white;
+}
