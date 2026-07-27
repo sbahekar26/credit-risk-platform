@@ -1,0 +1,82 @@
+@page "/"
+@rendermode InteractiveServer
+@using CreditRisk.Core
+@using System.Net.Http.Json
+@inject IHttpClientFactory HttpClientFactory
+
+<h1 class="page-title">Dashboard</h1>
+
+@if (applications == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="stat-grid">
+        <div class="stat-card">
+            <span class="stat-label">Total Applications</span>
+            <span class="stat-value">@applications.Count</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Approved</span>
+            <span class="stat-value approved">@approvedCount</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">In Review</span>
+            <span class="stat-value review">@reviewCount</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Declined</span>
+            <span class="stat-value decline">@declineCount</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Approval Rate</span>
+            <span class="stat-value">@approvalRate%</span>
+        </div>
+    </div>
+
+    <div class="breakdown-card">
+        <h3>Decision Breakdown</h3>
+        @if (applications.Count > 0)
+        {
+            <div class="breakdown-bar">
+                <div class="seg seg-approved" style="width:@Percent(approvedCount)%"></div>
+                <div class="seg seg-review" style="width:@Percent(reviewCount)%"></div>
+                <div class="seg seg-decline" style="width:@Percent(declineCount)%"></div>
+            </div>
+            <div class="breakdown-legend">
+                <span><i class="dot dot-approved"></i> Approved (@approvedCount)</span>
+                <span><i class="dot dot-review"></i> Review (@reviewCount)</span>
+                <span><i class="dot dot-decline"></i> Declined (@declineCount)</span>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<LoanApplication>? applications;
+    private int approvedCount;
+    private int reviewCount;
+    private int declineCount;
+    private int approvalRate;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var client = HttpClientFactory.CreateClient();
+        applications = await client.GetFromJsonAsync<List<LoanApplication>>(
+            "http://localhost:5260/api/applications");
+
+        if (applications != null)
+        {
+            approvedCount = applications.Count(a => a.Decision == RiskDecision.Approved);
+            reviewCount = applications.Count(a => a.Decision == RiskDecision.Review);
+            declineCount = applications.Count(a => a.Decision == RiskDecision.Decline);
+            approvalRate = applications.Count > 0
+                ? (int)Math.Round(100.0 * approvedCount / applications.Count)
+                : 0;
+        }
+    }
+
+    private int Percent(int count) =>
+        applications!.Count > 0 ? (int)Math.Round(100.0 * count / applications.Count) : 0;
+}
