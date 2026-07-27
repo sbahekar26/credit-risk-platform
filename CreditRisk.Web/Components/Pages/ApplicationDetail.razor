@@ -1,0 +1,67 @@
+@page "/applications/{Id:int}"
+@rendermode InteractiveServer
+@using CreditRisk.Core
+@using System.Net.Http.Json
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
+
+<button class="btn-back" @onclick="GoBack">&larr; Back to list</button>
+
+@if (application == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="detail-header">
+        <h1>Application #@application.Id</h1>
+        <span class="badge badge-@application.Decision.ToString().ToLower()">
+            @application.Decision
+        </span>
+    </div>
+
+    <div class="detail-grid">
+        <div class="detail-card">
+            <h3>Applicant</h3>
+            <div class="field"><span>Name</span><strong>@application.FullName</strong></div>
+            <div class="field"><span>Age</span><strong>@application.Age</strong></div>
+            <div class="field"><span>Employment</span><strong>@FeatureLabels.Employment(application.Employment)</strong></div>
+            <div class="field"><span>Housing</span><strong>@FeatureLabels.Housing(application.Housing)</strong></div>
+        </div>
+
+        <div class="detail-card">
+            <h3>Loan</h3>
+            <div class="field"><span>Amount</span><strong>@application.CreditAmount.ToString("C0")</strong></div>
+            <div class="field"><span>Duration</span><strong>@application.DurationMonths months</strong></div>
+            <div class="field"><span>Purpose</span><strong>@FeatureLabels.Purpose(application.Purpose)</strong></div>
+        </div>
+
+        <div class="detail-card">
+            <h3>Financial Profile</h3>
+            <div class="field"><span>Checking Account</span><strong>@FeatureLabels.CheckingStatus(application.CheckingStatus)</strong></div>
+            <div class="field"><span>Savings</span><strong>@FeatureLabels.Savings(application.Savings)</strong></div>
+            <div class="field"><span>Credit History</span><strong>@FeatureLabels.CreditHistory(application.CreditHistory)</strong></div>
+        </div>
+    </div>
+
+    <p class="submitted">Submitted @application.SubmittedOn.ToString("MMM d, yyyy 'at' h:mm tt")</p>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private LoanApplication? application;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var client = HttpClientFactory.CreateClient();
+        application = await client.GetFromJsonAsync<LoanApplication>(
+            $"http://localhost:5260/api/applications/{Id}");
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/applications");
+    }
+}
