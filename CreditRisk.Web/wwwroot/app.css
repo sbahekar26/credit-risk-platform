@@ -117,3 +117,51 @@ h1:focus {
     background: #1a1a2e;
     color: white;
 }
+
+.btn-back {
+    background: none;
+    border: none;
+    color: #1a1a2e;
+    cursor: pointer;
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+    padding: 0;
+}
+.btn-back:hover { text-decoration: underline; }
+
+.detail-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+.detail-header h1 { margin: 0; font-size: 1.8rem; color: #1a1a2e; }
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.25rem;
+}
+
+.detail-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.detail-card h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    color: #666;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+.field {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.4rem 0;
+}
+.field span { color: #888; }
+
+.submitted { color: #999; margin-top: 1.5rem; font-size: 0.9rem; }
