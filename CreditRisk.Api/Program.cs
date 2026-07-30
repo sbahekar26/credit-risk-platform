@@ -5,7 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<CreditRiskPredictor>();
 builder.Services.AddDbContext<CreditRiskDbContext>(options => 
-options.UseSqlite("Data Source = creditrisk.db"));
+options.UseNpgsql("Host=localhost;Port=5432;Database=creditrisk;Username=postgres;Password=devpassword"));
 
 builder.Services.AddCors(options =>
 {
@@ -19,7 +19,7 @@ app.UseHttpsRedirection();
 
 app.MapPost("/api/applications", async (LoanApplication application, CreditRiskDbContext db, CreditRiskPredictor predictor) =>
 {
-    application.SubmittedOn = DateTime.Now;
+    application.SubmittedOn = DateTime.UtcNow;
     application.Decision = predictor.Evaluate(application);   // ← was: RiskDecision.Review
 
     db.LoanApplications.Add(application);
