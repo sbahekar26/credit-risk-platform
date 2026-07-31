@@ -1,5 +1,7 @@
 using CreditRisk.Core;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Connectors.Ollama;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHttpClient();
@@ -42,5 +44,15 @@ app.MapGet("/api/applications/{id}", async (int id, CreditRiskDbContext db) =>
     await db.LoanApplications.FindAsync(id) is LoanApplication app
         ? Results.Ok(app)
         : Results.NotFound());
+
+app.MapGet("/api/ask-test", async (string question) =>
+{
+    var builder = Microsoft.SemanticKernel.Kernel.CreateBuilder();
+    builder.AddOllamaChatCompletion("llama3.2", new Uri("http://localhost:11434"));
+    var kernel = builder.Build();
+
+    var result = await kernel.InvokePromptAsync(question);
+    return Results.Ok(result.ToString());
+});
 
 app.Run();
