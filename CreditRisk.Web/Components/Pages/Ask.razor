@@ -1,0 +1,79 @@
+@page "/ask"
+@rendermode InteractiveServer
+@using System.Net.Http.Json
+@inject IHttpClientFactory HttpClientFactory
+
+<h1 class="page-title">Ask the Assistant</h1>
+<p class="ask-subtitle">Ask questions about the loan applications in plain English.</p>
+
+<div class="ask-box">
+    <input type="text" class="ask-input" placeholder="e.g. Which applications were declined and why?"
+           @bind="question" @bind:event="oninput" @onkeydown="OnKeyDown" disabled="@loading" />
+    <button class="ask-btn" @onclick="SubmitQuestion" disabled="@loading">
+        @(loading ? "Thinking..." : "Ask")
+    </button>
+</div>
+
+@if (loading)
+{
+    <div class="ask-loading">The assistant is searching applications and composing an answer...</div>
+}
+
+@if (!string.IsNullOrEmpty(answer))
+{
+    <div class="ask-answer">
+        <h3>Answer</h3>
+        <p>@answer</p>
+        <span class="ask-sources">Grounded in @sourcesUsed application(s)</span>
+    </div>
+}
+
+@code {
+    private string question = "";
+    private string answer = "";
+    private int sourcesUsed;
+    private bool loading;
+
+    private async Task SubmitQuestion()
+    {
+        if (string.IsNullOrWhiteSpace(question) || loading) return;
+
+        loading = true;
+        answer = "";
+
+        try
+        {
+            var client = HttpClientFactory.CreateClient();
+            client.Timeout = TimeSpan.FromSeconds(120);   // LLM calls are slow
+
+            var encoded = Uri.EscapeDataString(question);
+            var result = await client.GetFromJsonAsync<AskResponse>(
+                $"http://localhost:5260/api/ask?question={encoded}");
+
+            answer = result?.Answer ?? "No answer returned.";
+            sourcesUsed = result?.SourcesUsed ?? 0;
+        }
+        catch (Exception ex)
+        {
+            answer = $"Something went wrong: {ex.Message}";
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SubmitQuestion();
+        }
+    }
+
+    private class AskResponse
+    {
+        public string? Answer { get; set; }
+        public int SourcesUsed { get; set; }
+    }
+}
