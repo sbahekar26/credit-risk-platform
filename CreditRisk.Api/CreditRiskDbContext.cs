@@ -10,4 +10,14 @@ public class CreditRiskDbContext : DbContext
 
     public DbSet<LoanApplication> LoanApplications { get; set; }
     // delete the Applicants DbSet line — Applicant no longer exists
+
+    public DbSet<ApplicationEmbedding> ApplicationEmbeddings { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.HasPostgresExtension("vector");
+        modelBuilder.Entity<ApplicationEmbedding>()
+            .Property(e => e.Embedding)
+            .HasColumnType("vector(768)");
+    }
 }

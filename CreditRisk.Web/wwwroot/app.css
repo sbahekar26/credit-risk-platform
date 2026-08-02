@@ -221,3 +221,48 @@ h1:focus {
 .dot-approved { background: #28a745; }
 .dot-review   { background: #ffc107; }
 .dot-decline  { background: #dc3545; }
+
+.ask-subtitle { color: #888; margin-bottom: 1.5rem; }
+
+.ask-box {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+.ask-input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+.ask-input:focus {
+    outline: none;
+    border-color: #1a1a2e;
+}
+.ask-btn {
+    padding: 0.75rem 1.5rem;
+    background: #1a1a2e;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+.ask-btn:disabled { opacity: 0.6; cursor: default; }
+
+.ask-loading {
+    color: #666;
+    font-style: italic;
+    padding: 1rem 0;
+}
+
+.ask-answer {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.ask-answer h3 { margin: 0 0 0.75rem 0; color: #1a1a2e; }
+.ask-answer p { white-space: pre-wrap; line-height: 1.6; margin: 0 0 1rem 0; }
+.ask-sources { color: #999; font-size: 0.85rem; }
