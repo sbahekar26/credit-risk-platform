@@ -27,12 +27,31 @@ app.UseCors();
 
 app.UseHttpsRedirection();
 
-app.MapPost("/api/applications", async (LoanApplication application, CreditRiskDbContext db, CreditRiskPredictor predictor) =>
+app.MapPost("/api/applications", async (LoanApplication application, CreditRiskDbContext db, CreditRiskPredictor predictor, EmbeddingService embedder) =>
 {
     application.SubmittedOn = DateTime.UtcNow;
     application.Decision = predictor.Evaluate(application);   // ← was: RiskDecision.Review
 
     db.LoanApplications.Add(application);
+    await db.SaveChangesAsync();
+
+    // auto-embed the new application for RAG
+    string content =
+        $"Application {application.Id}: {application.FullName}, age {application.Age}. " +
+        $"Loan of {application.CreditAmount:C0} over {application.DurationMonths} months for {FeatureLabels.Purpose(application.Purpose)}. " +
+        $"Checking: {FeatureLabels.CheckingStatus(application.CheckingStatus)}. " +
+        $"Credit history: {FeatureLabels.CreditHistory(application.CreditHistory)}. " +
+        $"Employment: {FeatureLabels.Employment(application.Employment)}. " +
+        $"Decision: {application.Decision}.";
+
+    var vector = await embedder.GetEmbeddingAsync(content);
+
+    db.ApplicationEmbeddings.Add(new ApplicationEmbedding
+    {
+        LoanApplicationId = application.Id,
+        Content = content,
+        Embedding = vector
+    });
     await db.SaveChangesAsync();
 
     return Results.Ok(new
