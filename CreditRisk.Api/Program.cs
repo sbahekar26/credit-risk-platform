@@ -10,8 +10,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<EmbeddingService>();
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<CreditRiskPredictor>();
-builder.Services.AddDbContext<CreditRiskDbContext>(options => 
-options.UseNpgsql("Host=localhost;Port=5432;Database=creditrisk;Username=postgres;Password=devpassword"));
 
 builder.Services.AddDbContext<CreditRiskDbContext>(options =>
     options.UseNpgsql("Host=localhost;Port=5432;Database=creditrisk;Username=postgres;Password=devpassword",
@@ -36,13 +34,7 @@ app.MapPost("/api/applications", async (LoanApplication application, CreditRiskD
     await db.SaveChangesAsync();
 
     // auto-embed the new application for RAG
-    string content =
-        $"Application {application.Id}: {application.FullName}, age {application.Age}. " +
-        $"Loan of {application.CreditAmount:C0} over {application.DurationMonths} months for {FeatureLabels.Purpose(application.Purpose)}. " +
-        $"Checking: {FeatureLabels.CheckingStatus(application.CheckingStatus)}. " +
-        $"Credit history: {FeatureLabels.CreditHistory(application.CreditHistory)}. " +
-        $"Employment: {FeatureLabels.Employment(application.Employment)}. " +
-        $"Decision: {application.Decision}.";
+    string content = EmbeddingService.BuildContent(application);
 
     var vector = await embedder.GetEmbeddingAsync(content);
 
@@ -90,13 +82,7 @@ app.MapPost("/api/index-applications", async (CreditRiskDbContext db, EmbeddingS
     foreach (var app in applications)
     {
         // build a readable text description of the application
-        string content =
-            $"Application {app.Id}: {app.FullName}, age {app.Age}. " +
-            $"Loan of {app.CreditAmount:C0} over {app.DurationMonths} months for {FeatureLabels.Purpose(app.Purpose)}. " +
-            $"Checking: {FeatureLabels.CheckingStatus(app.CheckingStatus)}. " +
-            $"Credit history: {FeatureLabels.CreditHistory(app.CreditHistory)}. " +
-            $"Employment: {FeatureLabels.Employment(app.Employment)}. " +
-            $"Decision: {app.Decision}.";
+        string content = EmbeddingService.BuildContent(app);
 
         var vector = await embedder.GetEmbeddingAsync(content);
 
