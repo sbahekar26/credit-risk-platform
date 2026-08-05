@@ -19,9 +19,7 @@ public class CreditRiskPredictor
         CreditData input = MapToModelInput(app);
         CreditPrediction prediction = _engine.Predict(input);
 
-        if (prediction.Probability >= 0.6f) return RiskDecision.Decline;
-        if (prediction.Probability >= 0.35f) return RiskDecision.Review;
-        return RiskDecision.Approved;
+        return DecisionThresholds.FromProbability(prediction.Probability);
     }
 
     private CreditData MapToModelInput(LoanApplication app)
