@@ -1,5 +1,4 @@
 namespace CreditRisk.Core;
-
 public static class DecisionThresholds
 {
     public static RiskDecision FromProbability(float probability)
