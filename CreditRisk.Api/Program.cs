@@ -10,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<EmbeddingService>();
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<CreditRiskPredictor>();
+builder.Services.AddScoped<ApplicationStatsService>();
 
 builder.Services.AddDbContext<CreditRiskDbContext>(options =>
     options.UseNpgsql("Host=localhost;Port=5432;Database=creditrisk;Username=postgres;Password=devpassword",
@@ -99,32 +100,36 @@ app.MapPost("/api/index-applications", async (CreditRiskDbContext db, EmbeddingS
     return Results.Ok($"Indexed {indexed} applications.");
 });
 
-app.MapGet("/api/ask", async (string question, CreditRiskDbContext db, EmbeddingService embedder) =>
+app.MapGet("/api/ask", async (string question, CreditRiskDbContext db, EmbeddingService embedder, ApplicationStatsService stats) =>
 {
-    // 1. embed the question
+    // 1. try to answer with a structured query first
+    string? statsAnswer = await stats.TryAnswer(question);
+    if (statsAnswer != null)
+    {
+        return Results.Ok(new { question, answer = statsAnswer, source = "database" });
+    }
+
+    // 2. fall back to vector RAG for semantic questions
     var questionVector = await embedder.GetEmbeddingAsync(question);
 
-    // 2. similarity search — find the 3 most relevant applications
     var relevant = await db.ApplicationEmbeddings
         .OrderBy(e => e.Embedding.CosineDistance(questionVector))
         .Take(3)
         .Select(e => e.Content)
         .ToListAsync();
 
-    // 3. build the grounded prompt
     string context = string.Join("\n", relevant);
     string prompt =
         $"You are a credit risk assistant. Answer the question using ONLY the application data below.\n\n" +
         $"Application data:\n{context}\n\n" +
         $"Question: {question}\n\nAnswer:";
 
-    // 4. ask the LLM
-    var builder = Microsoft.SemanticKernel.Kernel.CreateBuilder();
-    builder.AddOllamaChatCompletion("llama3.2", new Uri("http://localhost:11434"));
-    var kernel = builder.Build();
+    var kernelBuilder = Microsoft.SemanticKernel.Kernel.CreateBuilder();
+    kernelBuilder.AddOllamaChatCompletion("llama3.2", new Uri("http://localhost:11434"));
+    var kernel = kernelBuilder.Build();
     var result = await kernel.InvokePromptAsync(prompt);
 
-    return Results.Ok(new { question, answer = result.ToString(), sourcesUsed = relevant.Count });
+    return Results.Ok(new { question, answer = result.ToString(), source = "rag" });
 });
 
 app.Run();
