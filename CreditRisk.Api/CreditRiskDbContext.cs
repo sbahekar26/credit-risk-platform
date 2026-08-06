@@ -14,10 +14,18 @@ public class CreditRiskDbContext : DbContext
     public DbSet<ApplicationEmbedding> ApplicationEmbeddings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    if (Database.IsNpgsql())
     {
         modelBuilder.HasPostgresExtension("vector");
         modelBuilder.Entity<ApplicationEmbedding>()
             .Property(e => e.Embedding)
             .HasColumnType("vector(768)");
     }
+    else
+    {
+        // in-memory/test provider can't map Vector — ignore the embeddings table
+        modelBuilder.Ignore<ApplicationEmbedding>();
+    }
+}
 }

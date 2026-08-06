@@ -1,3 +1,4 @@
+
 using CreditRisk.Core;
 using Microsoft.EntityFrameworkCore;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
@@ -133,3 +134,5 @@ app.MapGet("/api/ask", async (string question, CreditRiskDbContext db, Embedding
 });
 
 app.Run();
+
+public partial class Program { }
