@@ -107,10 +107,9 @@
 
     private async Task SubmitApplication()
 {
-    var client = HttpClientFactory.CreateClient();
-
+    var client = HttpClientFactory.CreateClient("api");
     var response = await client.PostAsJsonAsync(
-        "http://localhost:5260/api/applications", application);
+        "/api/applications", application);
 
     if (response.IsSuccessStatusCode)
     {

@@ -55,9 +55,9 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var client = HttpClientFactory.CreateClient();
+        var client = HttpClientFactory.CreateClient("api");
         applications = await client.GetFromJsonAsync<List<LoanApplication>>(
-            "http://localhost:5260/api/applications");
+            "/api/applications");
     }
 
     private void ViewDetail(int id)

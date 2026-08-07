@@ -9,7 +9,7 @@ public class EmbeddingService
     public EmbeddingService(IHttpClientFactory factory)
     {
         _http = factory.CreateClient();
-        _http.BaseAddress = new Uri("http://localhost:11434");
+        _http.BaseAddress = new Uri("http://host.docker.internal:11434");
     }
 
     public async Task<Vector> GetEmbeddingAsync(string text)

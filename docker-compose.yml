@@ -1,0 +1,44 @@
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_PASSWORD: devpassword
+      POSTGRES_DB: creditrisk
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: CreditRisk.Api/Dockerfile
+    ports:
+      - "5260:8080"
+    environment:
+      ConnectionStrings__Default: "Host=db;Port=5432;Database=creditrisk;Username=postgres;Password=devpassword"
+      Ollama__Url: "http://host.docker.internal:11434"
+    depends_on:
+      db:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  web:
+    build:
+      context: .
+      dockerfile: CreditRisk.Web/Dockerfile
+    ports:
+      - "5272:8080"
+    environment:
+      ApiBaseUrl: "http://api:8080"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
