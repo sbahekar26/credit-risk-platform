@@ -43,13 +43,12 @@
 
         try
         {
-            var client = HttpClientFactory.CreateClient();
-            client.Timeout = TimeSpan.FromSeconds(120);   // LLM calls are slow
+           var client = HttpClientFactory.CreateClient("api");
+            client.Timeout = TimeSpan.FromSeconds(120);
 
             var encoded = Uri.EscapeDataString(question);
             var result = await client.GetFromJsonAsync<AskResponse>(
-                $"http://localhost:5260/api/ask?question={encoded}");
-
+    $"/api/ask?question={encoded}");
             answer = result?.Answer ?? "No answer returned.";
             sourcesUsed = result?.SourcesUsed ?? 0;
         }

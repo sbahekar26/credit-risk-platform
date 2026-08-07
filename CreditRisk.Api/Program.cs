@@ -14,8 +14,8 @@ builder.Services.AddSingleton<CreditRiskPredictor>();
 builder.Services.AddScoped<ApplicationStatsService>();
 
 builder.Services.AddDbContext<CreditRiskDbContext>(options =>
-    options.UseNpgsql("Host=localhost;Port=5432;Database=creditrisk;Username=postgres;Password=devpassword",
-        o => o.UseVector()));
+    options.UseNpgsql("Host=db;Port=5432;Database=creditrisk;Username=postgres;Password=devpassword",
+    o => o.UseVector()));
 
 builder.Services.AddCors(options =>
 {
@@ -23,8 +23,14 @@ builder.Services.AddCors(options =>
         policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 });
 var app = builder.Build();
-app.UseCors();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<CreditRiskDbContext>();
+    db.Database.Migrate();
+}
+
+app.UseCors();
 app.UseHttpsRedirection();
 
 app.MapPost("/api/applications", async (LoanApplication application, CreditRiskDbContext db, CreditRiskPredictor predictor, EmbeddingService embedder) =>
@@ -69,7 +75,7 @@ app.MapGet("/api/applications/{id}", async (int id, CreditRiskDbContext db) =>
 app.MapGet("/api/ask-test", async (string question) =>
 {
     var builder = Microsoft.SemanticKernel.Kernel.CreateBuilder();
-    builder.AddOllamaChatCompletion("llama3.2", new Uri("http://localhost:11434"));
+    builder.AddOllamaChatCompletion("llama3.2", new Uri("http://host.docker.internal:11434"));
     var kernel = builder.Build();
 
     var result = await kernel.InvokePromptAsync(question);
@@ -126,7 +132,7 @@ app.MapGet("/api/ask", async (string question, CreditRiskDbContext db, Embedding
         $"Question: {question}\n\nAnswer:";
 
     var kernelBuilder = Microsoft.SemanticKernel.Kernel.CreateBuilder();
-    kernelBuilder.AddOllamaChatCompletion("llama3.2", new Uri("http://localhost:11434"));
+    kernelBuilder.AddOllamaChatCompletion("llama3.2", new Uri("http://host.docker.internal:11434"));
     var kernel = kernelBuilder.Build();
     var result = await kernel.InvokePromptAsync(prompt);
 
