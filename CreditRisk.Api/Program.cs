@@ -35,6 +35,14 @@ app.UseHttpsRedirection();
 
 app.MapPost("/api/applications", async (LoanApplication application, CreditRiskDbContext db, CreditRiskPredictor predictor, EmbeddingService embedder) =>
 {
+    // server-side validation
+    var validationContext = new System.ComponentModel.DataAnnotations.ValidationContext(application);
+    var validationResults = new List<System.ComponentModel.DataAnnotations.ValidationResult>();
+    if (!System.ComponentModel.DataAnnotations.Validator.TryValidateObject(application, validationContext, validationResults, true))
+    {
+        return Results.BadRequest(validationResults.Select(r => r.ErrorMessage));
+    }
+    
     application.SubmittedOn = DateTime.UtcNow;
     application.Decision = predictor.Evaluate(application);   // ← was: RiskDecision.Review
 
