@@ -7,6 +7,8 @@
 <h3>Loan Application</h3>
 
 <EditForm Model="@application" OnValidSubmit="@SubmitApplication" FormName="loanForm">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
     <div>
         <label>Full Name:</label>
         <InputText @bind-Value="application.FullName" />

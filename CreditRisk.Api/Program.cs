@@ -13,8 +13,12 @@ builder.Services.AddHttpClient();
 builder.Services.AddSingleton<CreditRiskPredictor>();
 builder.Services.AddScoped<ApplicationStatsService>();
 
+string connectionString = builder.Configuration.GetConnectionString("Default")
+    ?? "Host=localhost;Port=5432;Database=creditrisk;Username=postgres;Password=devpassword";
+string ollamaUrl = builder.Configuration["Ollama:Url"] ?? "http://localhost:11434";
+
 builder.Services.AddDbContext<CreditRiskDbContext>(options =>
-    options.UseNpgsql("Host=db;Port=5432;Database=creditrisk;Username=postgres;Password=devpassword",
+    options.UseNpgsql(connectionString,
     o => o.UseVector()));
 
 builder.Services.AddCors(options =>
@@ -35,6 +39,14 @@ app.UseHttpsRedirection();
 
 app.MapPost("/api/applications", async (LoanApplication application, CreditRiskDbContext db, CreditRiskPredictor predictor, EmbeddingService embedder) =>
 {
+    // server-side validation
+    var validationContext = new System.ComponentModel.DataAnnotations.ValidationContext(application);
+    var validationResults = new List<System.ComponentModel.DataAnnotations.ValidationResult>();
+    if (!System.ComponentModel.DataAnnotations.Validator.TryValidateObject(application, validationContext, validationResults, true))
+    {
+        return Results.BadRequest(validationResults.Select(r => r.ErrorMessage));
+    }
+    
     application.SubmittedOn = DateTime.UtcNow;
     application.Decision = predictor.Evaluate(application);   // ← was: RiskDecision.Review
 
@@ -75,7 +87,7 @@ app.MapGet("/api/applications/{id}", async (int id, CreditRiskDbContext db) =>
 app.MapGet("/api/ask-test", async (string question) =>
 {
     var builder = Microsoft.SemanticKernel.Kernel.CreateBuilder();
-    builder.AddOllamaChatCompletion("llama3.2", new Uri("http://host.docker.internal:11434"));
+    builder.AddOllamaChatCompletion("llama3.2", new Uri(ollamaUrl));
     var kernel = builder.Build();
 
     var result = await kernel.InvokePromptAsync(question);
@@ -132,7 +144,7 @@ app.MapGet("/api/ask", async (string question, CreditRiskDbContext db, Embedding
         $"Question: {question}\n\nAnswer:";
 
     var kernelBuilder = Microsoft.SemanticKernel.Kernel.CreateBuilder();
-    kernelBuilder.AddOllamaChatCompletion("llama3.2", new Uri("http://host.docker.internal:11434"));
+    kernelBuilder.AddOllamaChatCompletion("llama3.2", new Uri(ollamaUrl));
     var kernel = kernelBuilder.Build();
     var result = await kernel.InvokePromptAsync(prompt);
 

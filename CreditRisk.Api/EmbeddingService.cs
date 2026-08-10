@@ -6,10 +6,10 @@ public class EmbeddingService
 {
     private readonly HttpClient _http;
 
-    public EmbeddingService(IHttpClientFactory factory)
+    public EmbeddingService(IHttpClientFactory factory, IConfiguration config)
     {
         _http = factory.CreateClient();
-        _http.BaseAddress = new Uri("http://host.docker.internal:11434");
+        _http.BaseAddress = new Uri(config["Ollama:Url"] ?? "http://localhost:11434");
     }
 
     public async Task<Vector> GetEmbeddingAsync(string text)
