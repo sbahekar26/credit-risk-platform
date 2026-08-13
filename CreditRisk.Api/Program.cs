@@ -34,6 +34,23 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate();
 }
 
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+        var feature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+
+        if (feature?.Error is not null)
+        {
+            logger.LogError(feature.Error, "Unhandled exception processing {Path}", context.Request.Path);
+        }
+
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsJsonAsync(new { error = "An unexpected error occurred. Please try again." });
+    });
+});
+
 app.UseCors();
 app.UseHttpsRedirection();
 
@@ -65,6 +82,8 @@ app.MapPost("/api/applications", async (LoanApplication application, CreditRiskD
         Embedding = vector
     });
     await db.SaveChangesAsync();
+
+    app.Logger.LogInformation("Application {Id} scored as {Decision}", application.Id, application.Decision);
 
     return Results.Ok(new
     {

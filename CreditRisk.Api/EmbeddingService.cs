@@ -1,27 +1,39 @@
 using System.Net.Http.Json;
 using CreditRisk.Core;
+using Microsoft.Extensions.Logging;
 using Pgvector;
 
 public class EmbeddingService
 {
     private readonly HttpClient _http;
+    private readonly ILogger<EmbeddingService> _logger;
 
-    public EmbeddingService(IHttpClientFactory factory, IConfiguration config)
+    public EmbeddingService(IHttpClientFactory factory, IConfiguration config, ILogger<EmbeddingService> logger)
     {
         _http = factory.CreateClient();
         _http.BaseAddress = new Uri(config["Ollama:Url"] ?? "http://localhost:11434");
+        _logger = logger;
     }
 
     public async Task<Vector> GetEmbeddingAsync(string text)
     {
-        var response = await _http.PostAsJsonAsync("/api/embeddings", new
+        try
         {
-            model = "nomic-embed-text",
-            prompt = text
-        });
+            var response = await _http.PostAsJsonAsync("/api/embeddings", new
+            {
+                model = "nomic-embed-text",
+                prompt = text
+            });
+            response.EnsureSuccessStatusCode();
 
-        var result = await response.Content.ReadFromJsonAsync<EmbeddingResponse>();
-        return new Vector(result!.Embedding);
+            var result = await response.Content.ReadFromJsonAsync<EmbeddingResponse>();
+            return new Vector(result!.Embedding);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get embedding from Ollama. Is it running on the configured URL?");
+            throw;
+        }
     }
 
     private class EmbeddingResponse
